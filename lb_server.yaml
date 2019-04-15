@@ -1,0 +1,27 @@
+heat_template_version: 2015-04-30
+
+resources:
+  server:
+    type: OS::Nova::Server
+    properties:
+      flavor: 2048-10-1-1
+      image: xenial-server-cloudimg-amd64-disk1
+      admin_user: ubuntu
+      admin_pass: password
+      key_name: cletp3
+      user_data: |
+        #!/bin/bash
+        wget https://raw.githubusercontent.com/houssemmh/INF8480-TP3/master/server.py
+        sudo apt update
+        sudo apt install -y python2.7
+        chmod +x server.py
+        exec python2.7 server.py
+      networks:
+        - network: switch1-nat
+  member:
+    type: OS::Neutron::LBaaS::PoolMember
+    properties:
+      pool: {get_resource: mypool}
+      address: {get_attr: [server, first_address]}
+      protocol_port: 8080
+      subnet: reseau-NAT-vers-VLAN289
